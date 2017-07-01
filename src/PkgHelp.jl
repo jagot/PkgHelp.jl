@@ -71,6 +71,7 @@ function generate(pkg_name, license; kwargs...)
                 write(file, "\n")
             end
             rm("README.md")
+            run(`git add README.org`)
             run(`git commit -a -m "README.md -> README.org"`)
         end
     end
