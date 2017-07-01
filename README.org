@@ -32,6 +32,7 @@ this are automated using this package:
   Input Julia pkg sync dir: ~/julia-sync
   Moving /Users/stefanos/.julia/v0.5/TestPackage -> /Users/stefanos/programmering/julia/TestPackage.jl
   Linking /Users/stefanos/programmering/julia/TestPackage.jl -> /Users/stefanos/.julia/v0.5/TestPackage
+  Remote url https://github.com/jagot/TestPackage.jl.git -> git@github.com:jagot/TestPackage.jl.git
 #+END_example
 =Input Julia pkg sync dir:= only has to be done once per machine. The
 path entered is stored in =~/.julia/pkghelp.conf=.

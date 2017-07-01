@@ -31,6 +31,16 @@ function generate(pkg_name, license; kwargs...)
     mv(pkg_dir, pkg_sync_dir)
 
     link(pkg_name)
+
+    cd(pkg_sync_dir) do
+        git_url = strip(readstring(`git config --get remote.origin.url`))
+        m = match(r"https://github.com/(.+)/(.+)", git_url)
+        if m != nothing
+            new_git_url = "git@github.com:$(m[1])/$(m[2])"
+            println("Remote url $(git_url) -> $(new_git_url)")
+            run(`git remote set-url origin $(new_git_url)`)
+        end
+    end
 end
 
 function link(pkg_name)
