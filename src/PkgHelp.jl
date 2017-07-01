@@ -2,6 +2,7 @@ module PkgHelp
 
 using PkgDev
 using YAML
+using Coverage
 
 function get_config()
     pkghelp_conf = expanduser("~/.julia/pkghelp.yml")
@@ -89,5 +90,19 @@ function link(pkg_name)
     symlink(pkg_sync_dir, pkg_dir)
 end
 
+function test(pkg_name)
+    ismatch(r"\.jl$", pkg_name) && (pkg_name = pkg_name[1:end-3])
+    pkg_folder = joinpath(Pkg.dir(pkg_name), "src")
+    files = readdir(pkg_folder)
+    filter!(files) do f
+        ismatch(r"\.cov$", f)
+    end
+    map(files) do f
+        rm(joinpath(pkg_folder, f))
+    end
+    Pkg.test(pkg_name, coverage = true)
+    summary = get_summary(process_folder(pkg_folder))
+    @printf("Coverage: %0.2f %%\n", 100summary[1]/summary[2])
+end
 
 end # module
