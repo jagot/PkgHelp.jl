@@ -1,0 +1,54 @@
+#+TITLE: PkgHelp.jl
+#+AUTHOR: Stefanos Carlström
+#+EMAIL: stefanos.carlstrom@gmail.com
+
+This is a simple helper library for generating packages and storing
+them in a common location, from there linking them to
+=Pkg.dir(pkg_name)=. My use case is that I store my own packages that
+are under development in directory that I synchronize between
+different computers using [[https://syncthing.net][Syncthing]]. The steps necessary to achieve
+this are automated using this package:
+#+BEGIN_SRC julia
+  using PkgHelp
+
+  # Supports the same arguments as PkgDev.generate. Additionally, will
+  # strip ".jl" from end of package name, as shown here.
+  PkgHelp.generate("TestPackage.jl", "MIT")
+#+END_SRC
+
+#+BEGIN_example
+  INFO: Initializing TestPackage repo: /Users/stefanos/.julia/v0.5/TestPackage
+  INFO: Origin: https://github.com/jagot/TestPackage.jl.git
+  INFO: Generating LICENSE.md
+  INFO: Generating README.md
+  INFO: Generating src/TestPackage.jl
+  INFO: Generating test/runtests.jl
+  INFO: Generating REQUIRE
+  INFO: Generating .gitignore
+  INFO: Generating .travis.yml
+  INFO: Generating appveyor.yml
+  INFO: Generating .codecov.yml
+  INFO: Committing TestPackage generated files
+  Input Julia pkg sync dir: ~/julia-sync
+  Moving /Users/stefanos/.julia/v0.5/TestPackage -> /Users/stefanos/programmering/julia/TestPackage.jl
+  Linking /Users/stefanos/programmering/julia/TestPackage.jl -> /Users/stefanos/.julia/v0.5/TestPackage
+#+END_example
+=Input Julia pkg sync dir:= only has to be done once per machine. The
+path entered is stored in =~/.julia/pkghelp.conf=.
+
+This packages is also useful when setting up a new machine (make sure
+only /packages/ are stored in =~/julia-sync= for this to work as
+intended):
+#+BEGIN_SRC julia :results output
+  using PkgHelp
+
+  for pkg in readdir(expanduser("~/julia-sync"))
+      PkgHelp.link(pkg)
+  end
+#+END_SRC
+
+
+NB. It is not very useful to sync packages that have binary
+dependencies built in their =deps/= directory, since that will at
+least be platform dependent, and maybe also host dependent. Use this
+helper package for Julia-only packages.
