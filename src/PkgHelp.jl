@@ -67,6 +67,7 @@ function set_git_ssh(dir)
             new_git_url = "git@github.com:$(m[1])/$(m[2])"
             println("Remote url $(git_url) -> $(new_git_url)")
             run(`git remote set-url origin $(new_git_url)`)
+            run(`git config remote.origin.pushurl $(new_git_url)`)
         end
     end
 end
