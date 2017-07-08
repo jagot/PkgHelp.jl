@@ -141,4 +141,16 @@ function test(pkg_name)
     @printf("Coverage: %0.2f %%\n", 100summary[1]/summary[2])
 end
 
+function clone(github_repo)
+    m = match(r"([a-zA-Z0-9]+)/([a-zA-Z0-9]+)$", github_repo)
+    user_name = m[1]
+    pkg_name = m[2]
+    try
+        Pkg.installed(pkg_name) != nothing && return
+    catch
+        Pkg.clone("https://github.com/$(github_repo).jl.git", pkg_name)
+    end
+    user_name == get_github_user() && set_git_ssh(Pkg.dir(pkg_name))
+end
+
 end # module
