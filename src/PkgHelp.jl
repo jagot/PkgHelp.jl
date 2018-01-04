@@ -130,15 +130,20 @@ end
 function test(pkg_name)
     ismatch(r"\.jl$", pkg_name) && (pkg_name = pkg_name[1:end-3])
     pkg_folder = joinpath(Pkg.dir(pkg_name), "src")
-    files = readdir(pkg_folder)
-    filter!(files) do f
-        ismatch(r"\.cov$", f)
-    end
-    map(files) do f
-        rm(joinpath(pkg_folder, f))
-    end
+    clean_folder(pkg_folder)
     Pkg.test(pkg_name, coverage = true)
-    summary = get_summary(process_folder(pkg_folder))
+    coverage = process_folder(pkg_folder)
+    coverage_file = joinpath(pkg_folder, "lcov.info")
+    LCOV.writefile(coverage_file, coverage)
+    try
+        real_folder = readlink(dirname(pkg_folder))
+        str = readstring(coverage_file)
+        open(coverage_file, "w") do file
+            write(file, replace(str, dirname(pkg_folder), real_folder))
+        end
+    catch
+    end
+    summary = get_summary(coverage)
     @printf("Coverage: %0.2f %%\n", 100summary[1]/summary[2])
 end
 
