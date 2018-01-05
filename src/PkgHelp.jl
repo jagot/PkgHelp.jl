@@ -130,7 +130,7 @@ end
 function test(pkg_name)
     ismatch(r"\.jl$", pkg_name) && (pkg_name = pkg_name[1:end-3])
     pkg_folder = joinpath(Pkg.dir(pkg_name), "src")
-    clean_folder(pkg_folder)
+    clean_folder(dirname(pkg_folder))
     Pkg.test(pkg_name, coverage = true)
     coverage = process_folder(pkg_folder)
     coverage_file = joinpath(pkg_folder, "lcov.info")
