@@ -86,9 +86,9 @@ function org_readme(dir, pkg_name)
                 [("https://travis-ci.org/$(github_user)/$(pkg_name).jl",
                   "https://travis-ci.org/$(github_user)/$(pkg_name).jl.svg?branch=master"),
                  ("https://coveralls.io/github/$(github_user)/$(pkg_name).jl?branch=master",
-                  "https://coveralls.io/repos/$(github_user)/$(pkg_name).jl/badge.svg?branch=master&service=github"),
-                 ("http://codecov.io/github/$(github_user)/$(pkg_name).jl?branch=master",
-                  "http://codecov.io/github/$(github_user)/$(pkg_name).jl/coverage.svg?branch=master")]
+                  "https://coveralls.io/repos/github/$(github_user)/$(pkg_name).jl/badge.svg?branch=master"),
+                 ("http://codecov.io/gh/$(github_user)/$(pkg_name).jl",
+                  "http://codecov.io/gh/$(github_user)/$(pkg_name).jl/branch/master/graph/badge.svg")]
                 write(file, "[[$(url)][$(badge)]]\n")
             end
             write(file, "\n")
