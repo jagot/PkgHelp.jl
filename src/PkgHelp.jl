@@ -132,6 +132,7 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
             user_name != "" && write(file, "#+AUTHOR: $(user_name)\n")
             user_email = get_git_config("user.email")
             user_email != "" && write(file, "#+EMAIL: $(user_email)\n")
+            write(file, "\n#+PROPERTY: header-args:julia :session *julia-$(pkg_name)*\n")
         end
 
         open(joinpath(pkg_dir, "src", "$(pkg_name).jl"), "w") do file
