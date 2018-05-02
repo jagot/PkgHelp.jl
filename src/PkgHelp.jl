@@ -148,7 +148,8 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
         end
 
         open(joinpath(pkg_dir, "test", "runtests.jl"), "w") do file
-            write(file, "module $(pkg_name)\n")
+            write(file, "using $(pkg_name)\n")
+            write(file, "using Base.Test\n")
             write(file, "\n")
             write(file, "const testfile = joinpath(dirname(@__FILE__), \"..\", \"deps\", \"build\", \"tests.jl\")\n")
             write(file, "if isfile(testfile)\n")
@@ -156,8 +157,6 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
             write(file, "else\n")
             write(file, "    error(\"$(pkg_name) not properly installed. Please run Pkg.build(\\\"$(pkg_name)\\\") then restart Julia.\")\n")
             write(file, "end\n")
-            write(file, "\n")
-            write(file, "end # module\n")
         end
 
         open(joinpath(pkg_dir, "REQUIRE"), "r+") do file
