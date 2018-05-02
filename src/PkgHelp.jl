@@ -4,8 +4,20 @@ using PkgDev
 using YAML
 using Coverage
 
+function expanduser_(path...)
+    if is_unix()
+        expanduser(joinpath(path...))
+    else
+        if length(path) > 1 && path[1] == "~"
+            joinpath(homedir(), path[2:end]...)
+        else
+            joinpath(path...)
+        end
+    end
+end
+
 function get_config(fun::Function, variable::String)
-    pkghelp_conf = expanduser("~/.julia/pkghelp.yml")
+    pkghelp_conf = expanduser_("~",".julia","pkghelp.yml")
     config = isfile(pkghelp_conf) ? YAML.load(open(pkghelp_conf)) : Dict()
 
     if variable in keys(config)
@@ -28,7 +40,9 @@ function get_syncdir()
         f = ""
         while !isdir(f)
             print("Input Julia pkg sync dir: ")
-            f = expanduser(strip(readline(STDIN)))
+            path = strip(readline(STDIN))
+            path = split(path, contains(path, "/") ? "/" : "\\")
+            f = expanduser_(path...)
         end
         f
     end
@@ -99,7 +113,7 @@ function org_readme(dir, pkg_name)
     end
 end
 
-function generate(pkg_name, license; kwargs...)
+function generate(pkg_name, license; org::Bool=false, kwargs...)
     ismatch(r"\.jl$", pkg_name) && (pkg_name = pkg_name[1:end-3])
 
     PkgDev.generate(pkg_name, license; kwargs...)
@@ -107,14 +121,71 @@ function generate(pkg_name, license; kwargs...)
     pkg_dir = Pkg.dir(pkg_name)
     pkg_sync_dir = joinpath(get_syncdir(), "$(pkg_name).jl")
 
+    get_github_user()
+    set_git_ssh(pkg_dir)
+    get_readme() == "org" && org_readme(pkg_dir, pkg_name)
+
+    if org
+        open(joinpath(pkg_dir, "src", "$(pkg_name).org"), "w") do file
+            write(file, "#+TITLE: $(pkg_name).jl\n")
+            user_name = get_git_config("user.name")
+            user_name != "" && write(file, "#+AUTHOR: $(user_name)\n")
+            user_email = get_git_config("user.email")
+            user_email != "" && write(file, "#+EMAIL: $(user_email)\n")
+        end
+
+        open(joinpath(pkg_dir, "src", "$(pkg_name).jl"), "w") do file
+            write(file, "module $(pkg_name)\n")
+            write(file, "\n")
+            write(file, "const codefile = joinpath(dirname(@__FILE__), \"..\", \"deps\", \"build\", \"code.jl\")\n")
+            write(file, "if isfile(codefile)\n")
+            write(file, "    include(codefile)\n")
+            write(file, "else\n")
+            write(file, "    error(\"$(pkg_name) not properly installed. Please run Pkg.build(\\\"$(pkg_name)\\\") then restart Julia.\")\n")
+            write(file, "end\n")
+            write(file, "\n")
+            write(file, "end # module\n")
+        end
+
+        open(joinpath(pkg_dir, "test", "runtests.jl"), "w") do file
+            write(file, "module $(pkg_name)\n")
+            write(file, "\n")
+            write(file, "const testfile = joinpath(dirname(@__FILE__), \"..\", \"deps\", \"build\", \"tests.jl\")\n")
+            write(file, "if isfile(testfile)\n")
+            write(file, "    include(testfile)\n")
+            write(file, "else\n")
+            write(file, "    error(\"$(pkg_name) not properly installed. Please run Pkg.build(\\\"$(pkg_name)\\\") then restart Julia.\")\n")
+            write(file, "end\n")
+            write(file, "\n")
+            write(file, "end # module\n")
+        end
+
+        open(joinpath(pkg_dir, "REQUIRE"), "r+") do file
+            seekend(file)
+            write(file, "\nLiterateOrg\n")
+        end
+
+        open(joinpath(pkg_dir, "README.org"), "r+") do file
+            seekend(file)
+            write(file, "\nThis is a [[https://github.com/jagot/LiterateOrg.jl][LiterateOrg.jl]] project. The documentation is found [[file:src/$(pkg_name).org][within the code]].\n")
+        end
+
+        mkpath(joinpath(pkg_dir, "deps"))
+        open(joinpath(pkg_dir, "deps", "build.jl"), "w") do file
+            write(file, "using LiterateOrg\n")
+            write(file, "tangle_package(joinpath(Pkg.dir(\"$(pkg_name)\", \"src\", \"$(pkg_name).org\")), \"$(pkg_name)\")")
+        end
+
+        cd(pkg_dir) do
+            run(`git add .`)
+            run(`git commit -a -m "LiterateOrg project"`)
+        end
+    end
+
     println("Moving $(pkg_dir) -> $(pkg_sync_dir)")
     mv(pkg_dir, pkg_sync_dir)
 
     link(pkg_name)
-
-    get_github_user()
-    set_git_ssh(pkg_sync_dir)
-    get_readme() == "org" && org_readme(pkg_sync_dir, pkg_name)
 end
 
 function link(pkg_name)
