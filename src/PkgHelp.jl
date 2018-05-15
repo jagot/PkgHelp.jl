@@ -138,7 +138,7 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
         open(joinpath(pkg_dir, "src", "$(pkg_name).jl"), "w") do file
             write(file, "module $(pkg_name)\n")
             write(file, "\n")
-            write(file, "const codefile = joinpath(dirname(@__FILE__), \"..\", \"deps\", \"build\", \"code.jl\")\n")
+            write(file, "const codefile = joinpath(dirname(@__FILE__), \"literate_org_tangled_code.jl\")\n")
             write(file, "if isfile(codefile)\n")
             write(file, "    include(codefile)\n")
             write(file, "else\n")
@@ -152,7 +152,7 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
             write(file, "using $(pkg_name)\n")
             write(file, "using Base.Test\n")
             write(file, "\n")
-            write(file, "const testfile = joinpath(dirname(@__FILE__), \"..\", \"deps\", \"build\", \"tests.jl\")\n")
+            write(file, "const testfile = joinpath(dirname(@__FILE__), \"literate_org_tangled_tests.jl\")\n")
             write(file, "if isfile(testfile)\n")
             write(file, "    include(testfile)\n")
             write(file, "else\n")
@@ -163,6 +163,11 @@ function generate(pkg_name, license; org::Bool=false, kwargs...)
         open(joinpath(pkg_dir, "REQUIRE"), "r+") do file
             seekend(file)
             write(file, "\nLiterateOrg\n")
+        end
+
+        open(joinpath(pkg_dir, ".gitignore"), "r+") do file
+            seekend(file)
+            write(file, "\n/src/literate_org_tangled_code.jl\n/test/literate_org_tangled_tests.jl\n")
         end
 
         open(joinpath(pkg_dir, "README.org"), "r+") do file
